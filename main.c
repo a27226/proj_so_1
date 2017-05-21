@@ -41,16 +41,15 @@ int Menu()
 int main()
 {
 	signal(SIGCONT, handler);
-	int p1[2],p2[2], pid, i, j;
+	int p1[2],p2[2], codeclient[4],codeserver[4], pid, i, j, k, clientpid, serverpid, code[4], colorc[4],rc=0,rp=0;
 	pipe(p1);
 	pipe(p2);
-	pid = fork();
-	int code[4],codeserver[4];
-	int max,r1,r2, clientpid, serverpid;
+	pid = fork(); 
 	//while(1==1)
 		if (0==pid)
 		{
 			//cliente
+			int colorc, posc;
 			clientpid=getpid();
 			write(p1[1], &clientpid, sizeof(&clientpid));
 			sleep(4);
@@ -61,23 +60,29 @@ int main()
 			pause();
 			for(i=0;i<10;i++)//game cycle for client
 			{
-				printf("Tentativa %d.",(i+1));	//faz uma tentativa
 				for(j=0;j<4;j++)//code choosing
-			{	//escolhe codigo
-				do
+				{	//escolhe codigo
+					do
+					{
+						printf("(Client)Insira digito %d\n",(j+1));
+						scanf("%d", &codeclient[j]);
+					} 
+					while(codeclient[j]<0 || codeclient[j]>5);
+					//passa controlo para o cliente (kil e depois pause)
+				}
+				write(p1[1], &codeclient, sizeof(&codeclient));//escreve tentativa na pipe
+				kill(serverpid,SIGCONT);//passa controlo e pausa
+				pause();
+				read(p2[0],&posc, sizeof(&posc));
+				read(p2[0],&colorc, sizeof(&colorc));
+				if(posc==4)
 				{
-					printf("Insira digito %d\n",(j+1));
-					scanf("%d", &code[j]);
-				} while(code[j]>0 && code[j]<5);
-				write(p1[1], &code, sizeof(&code));
-				kill(serverpid,SIGCONT);
-				pause();//passa controlo para o cliente (kil e depois pause)
-			}
-			}	//escreve tentativa na pipe
-				//passa controlo
-
-				//le feedback e escreve no ecra
-				//volta a enviar tentativa
+					printf("Parabens! Voce venceu o jogo do Mastermind!\n");
+					return 1;
+				}
+				else
+					printf("Tem %d cores em %d posicoes corretas.\n", colorc, posc);
+			}	
 
 
 			/*printf("Introduza o valor(Client): \n");
@@ -102,27 +107,45 @@ int main()
 			//server
 			serverpid=getpid();
 			sleep(2);
-			read(p1[0],&clientpid,sizeof(&clientpid));
 			write(p2[1],&serverpid,sizeof(&serverpid));
 			pause();
+			read(p1[0],&clientpid,sizeof(&clientpid));
 			for(i=0;i<4;i++)//code choosing
 			{	//escolhe codigo
 				do
 				{
-					printf("Insira digito %d\n",(i+1));
-					scanf("%d", &code[i]);
-				} while(code[i]>0 && code[i]<5);
+					printf("(Server)Insira digito %d\n",(i+1));
+					scanf("%d", &codeserver[i]);
+				} while(codeserver[i]<0 || codeserver[i]>5);
 			}
 			kill(clientpid,SIGCONT);
 			pause();//passa controlo para o cliente (kil e depois pause)
-
-			//game cycle for sv
-			for(i=0;i<10;i++)//game cycle for client
+			printf("Attempt in server reached.\n");
+			//server checks if code is right
+			for(i=0;i<10;i++)
 			{	
-				read(p1[0],&codeserver,sizeof(&codeserver));
-				//testa
-				//mostra feedback
-				//shift control
+				printf("Entered for.\n");
+				read(p1[0],&code,sizeof(&code));
+				for(j=0;j<5;j++)
+				{
+					for(k=0;k<5;k++)
+					{
+						if(code[j]==codeserver[k])
+						{
+							if(j==k)
+								rp++;
+							rc++;
+						}
+					}
+					k=0;
+				}
+				j=0;
+				if(rc>4)
+					rc=4;
+				write(p2[1],&rp,sizeof(&rp));
+				write(p2[1],&rc,sizeof(&rc));
+				kill(clientpid,SIGCONT);
+				pause();//shift control
 			}
 			/*printf("1S\n");
 			read(p1[0],&max,sz);
