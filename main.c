@@ -5,11 +5,7 @@
 #include <sys/types.h>
 #include <signal.h>
 
-#define sz sizeof(int)
-
 #define clrscr() printf("\033[H\033[J") //limpa ecra
-
-#define gotoxy(y,x) printf("\033[%d;%dH", (x), (y)) //reposiciona cursor
 
 #define RED     "\x1b[31m"  //coloring
 #define GREEN   "\x1b[32m"
@@ -23,25 +19,41 @@ void handler(int signum) //Sig handler
 {
 }
 
-int Menu()
-{
-	int i;
-    	printf("Mastermind - Game\n\n");
-    	printf("1 - ...\n");
-    	printf("2 - ...\n");
-    	printf("3 - ...\n");
-    	printf("4 - ...\n");
-    	printf("5 - ...\n\n");
-    	printf("Choose: ");
-    	scanf("%d",&i);
-    	printf("\n\n");
-    	return i;
-}
+void jogo();
 
 int main()
 {
+	int x;
+	clrscr();
+    	printf("Mastermind - Game\n\n");
+	printf("Insira um numero de 1 a 5: ");
+    	printf("\n\n1 - Jogar contra pc.\n");
+    	printf("2 - ...\n");
+    	printf("3 - ...\n");
+    	printf("4 - ...\n");
+    	printf("5 - Sair\n\n");
+    	scanf("%d",&x);
+    	printf("\n\n");
+	switch(x)
+	{
+		case 1 :
+		    	jogo();
+			break;
+		case 2 :
+			break;
+		case 3 :
+			break;
+		case 4 :
+			break;
+		case 5 :
+			break;
+	}
+}
+
+void jogo()
+{
 	signal(SIGCONT, handler);
-	int p1[2],p2[2], codeclient[4],codeserver[4], colors[4]={0,0,0,0}, pid, i, j, k, clientpid, serverpid,rc=0,rp=0;
+	int p1[2],p2[2], codeclient[4],codeserver[4], colors[4]={0,0,0,0}, checkc[4]={0,0,0,0}, pid, i, j, k, clientpid, serverpid,rc=0,rp=0;
 	pipe(p1);
 	pipe(p2);
 	pid = fork(); 
@@ -54,18 +66,29 @@ int main()
 			write(p1[1], &clientpid, sizeof(&clientpid));
 			sleep(1);
 			read(p2[0],&serverpid,sizeof(&serverpid));
-			printf("waiting for signal");
-			fflush(stdout);
-			getchar();
 			kill(serverpid, SIGCONT);
 			pause();
-			for(i=0;i<10;i++)//game cycle for client
+			for(int i=0;i<10;i++)//game cycle for client
 			{
 				for(j=0;j<4;j++)//code choosing
 				{	//escolhe codigo
 					do
 					{
-						printf("(Client)Insira digito %d\n",(j+1));
+						printf(COLORRESET"Insira cor %d\n",(j+1));
+						fflush(stdout);
+						printf(RED"0 - Vermelho\n");
+						fflush(stdout);
+						printf(GREEN"1 - Verde\n");
+						fflush(stdout);
+						printf(YELLOW"2 - Amarelo\n");
+						fflush(stdout);
+						printf(BLUE"3 - Azul\n");
+						fflush(stdout);
+						printf(MAGENTA"4 - Magenta\n");
+						fflush(stdout);
+						printf(CYAN"5 - Ciano\n");
+						fflush(stdout);
+						printf(COLORRESET"");
 						fflush(stdout);
 						scanf("%d", &codeclient[j]);
 					} 
@@ -81,55 +104,38 @@ int main()
 				fflush(stdout);
 				if(posc==4)
 				{
-					printf("Parabens! Voce venceu o jogo do Mastermind!\n");
-					kill(serverpid,SIGKILL);
-					return 1;
+					printf(COLORRESET"Parabens! Voce venceu o jogo do Mastermind!\n");
+					kill(serverpid,SIGTERM);
+					return ;
 				}
 				else
-					printf("Tem %d cores em %d posicoes corretas.\n", colorc, posc);
+				{
+					printf(COLORRESET"Tem %d cores em %d posicoes corretas(%d).\n", colorc, posc, (i+1));
 					fflush(stdout);
+				}
 			}
-			kill(serverpid,SIGCONT);
-			/*printf("Introduza o valor(Client): \n");
-			fflush(stdout);
-			scanf("%d",&max);
-			write(p1[1],&max,sz);
-			read(p2[0],&r1,sz);
-			printf("test client\n");
-			fflush(stdout);
-			printf("%d\n",r1);
-			fflush(stdout);
-			read(p1[0],&max,sz);
-			srand(time(NULL));
-			r2=1+rand()%max;
-			write(p2[1],&r2,sz);
-			printf("Cliente à espera...\n");
-			fflush(stdout);
-			sleep(1);*/
+			printf(RED"Esgotaram-se as tentativas...\n\nGAME OVER\n\n");
+			sleep(1);
+			kill(serverpid,SIGTERM);
 		}
 		else
 		{
 			//server
 			serverpid=getpid();
-			sleep(2);
+			sleep(1);
 			write(p2[1],&serverpid,sizeof(&serverpid));
 			pause();
 			read(p1[0],&clientpid,sizeof(&clientpid));
-			for(i=0;i<4;i++)//code choosing
-			{	//escolhe codigo
-				do
-				{
-					printf("(Server)Insira %d digito do codigo a decifrar:\n",(i+1));
-					fflush(stdout);
-					scanf("%d", &codeserver[i]);
-				} while(codeserver[i]<0 || codeserver[i]>5);
-			}
-			i=0;
+			srand(time(NULL));
+			for(int a=0;a<4;a++)//code choosing
+				codeserver[a]= rand()%6;
+			for(int c=0;c<4;c++)
+				printf("%d\n",codeserver[c]);
 			kill(clientpid,SIGCONT);
 			pause();//passa controlo para o cliente (kil e depois pause)
 			fflush(stdout);
 			//server checks if code is right
-			for(i=0;i<10;i++)
+			for(int b=0;b<10;b++)
 			{	
 				rc=0;
 				rp=0;
@@ -139,20 +145,16 @@ int main()
 				{
 					for(int l=0;l<4;l++)
 					{
-						printf("i = %d e j = %d\n",k,l);
 						if(codeclient[k]==codeserver[l])
 						{
-							if(colors[k]==0)
-							{
+							
+								rc++;
 								if(l==k)
 								{
 									rp++;
-									rc++;
 									break;
 								}
-								rc++;
-								colors[k]=1;
-							}
+							colors[k]=1;
 						}
 					}	
 				}
@@ -161,6 +163,10 @@ int main()
 				colors[1]=0;
 				colors[2]=0;
 				colors[3]=0;
+				checkc[0]=0;
+				checkc[1]=0;
+				checkc[2]=0;
+				checkc[3]=0;
 				write(p2[1],&rp,sizeof(&rp));
 				sleep(1);
 				write(p2[1],&rc,sizeof(&rc));
@@ -168,23 +174,6 @@ int main()
 				kill(clientpid,SIGCONT);
 				pause();//shift control
 			}
-			/*printf("1S\n");
-			read(p1[0],&max,sz);
-			printf("2S\n");
-			srand(time(NULL));
-			r1=1+rand()%max;
-			write(p2[1],&r1,sz);
-			printf("Servidor à espera...\n");
-			fflush(stdout);
-			sleep(1);
-			printf("Introduza o valor(Server): \n");
-			scanf("%d",&max);
-			write(p1[1],&max,sz);
-			read(p2[0],&r2,sz);
-			printf("test server\n");
-			fflush(stdout);
-			printf("%d\n",r2);
-			fflush(stdout);*/
 		}
-	return 0;
+	return ;
 }
