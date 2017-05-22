@@ -41,7 +41,7 @@ int Menu()
 int main()
 {
 	signal(SIGCONT, handler);
-	int p1[2],p2[2], codeclient[4],codeserver[4], pid, i, j, k, clientpid, serverpid, code[4], colorc[4],rc=0,rp=0;
+	int p1[2],p2[2], codeclient[4],codeserver[4], pid, i, j, k, clientpid, serverpid,rc=0,rp=0;
 	pipe(p1);
 	pipe(p2);
 	pid = fork(); 
@@ -55,6 +55,7 @@ int main()
 			sleep(4);
 			read(p2[0],&serverpid,sizeof(&serverpid));
 			printf("waiting for signal");
+			fflush(stdout);
 			getchar();
 			kill(serverpid, SIGCONT);
 			pause();
@@ -65,26 +66,32 @@ int main()
 					do
 					{
 						printf("(Client)Insira digito %d\n",(j+1));
+						fflush(stdout);
 						scanf("%d", &codeclient[j]);
 					} 
 					while(codeclient[j]<0 || codeclient[j]>5);
 					//passa controlo para o cliente (kil e depois pause)
 				}
-				write(p1[1], &codeclient, sizeof(&codeclient));//escreve tentativa na pipe
+				write(p1[1], codeclient, sizeof(codeclient));//escreve tentativa na pipe
 				kill(serverpid,SIGCONT);//passa controlo e pausa
 				pause();
+				printf("Switched to client for new try.\n");
+				fflush(stdout);
 				read(p2[0],&posc, sizeof(&posc));
 				read(p2[0],&colorc, sizeof(&colorc));
+				printf("Tem %d cores em %d posicoes corretas.\n", colorc, posc);
+				fflush(stdout);
 				if(posc==4)
 				{
 					printf("Parabens! Voce venceu o jogo do Mastermind!\n");
+					kill(serverpid,SIGSTOP);
 					return 1;
 				}
 				else
 					printf("Tem %d cores em %d posicoes corretas.\n", colorc, posc);
-			}	
-
-
+					fflush(stdout);
+			}
+			kill(serverpid,SIGCONT);
 			/*printf("Introduza o valor(Client): \n");
 			fflush(stdout);
 			scanf("%d",&max);
@@ -115,35 +122,48 @@ int main()
 				do
 				{
 					printf("(Server)Insira digito %d\n",(i+1));
+					fflush(stdout);
 					scanf("%d", &codeserver[i]);
 				} while(codeserver[i]<0 || codeserver[i]>5);
 			}
+			i=0;
 			kill(clientpid,SIGCONT);
 			pause();//passa controlo para o cliente (kil e depois pause)
-			printf("Attempt in server reached.\n");
+			fflush(stdout);
 			//server checks if code is right
 			for(i=0;i<10;i++)
 			{	
-				printf("Entered for.\n");
-				read(p1[0],&code,sizeof(&code));
-				for(j=0;j<5;j++)
+				rc=0;
+				rp=0;
+				fflush(stdout);
+				read(p1[0], codeclient, sizeof(codeclient));
+				for(k=0;k<4;k++)
 				{
-					for(k=0;k<5;k++)
+					for(int l=0;l<4;l++)
 					{
-						if(code[j]==codeserver[k])
+						if(codeclient[l]==codeserver[l])
 						{
-							if(j==k)
+							if(l==k)
+							{
 								rp++;
+								rc++;
+								break;
+							}
 							rc++;
 						}
-					}
-					k=0;
+					}	
 				}
-				j=0;
+				fflush(stdout);
 				if(rc>4)
 					rc=4;
+				printf("O jogador tem %d cores em %d posicoes corretas.\n", rc, rp);
 				write(p2[1],&rp,sizeof(&rp));
+				sleep(1);
 				write(p2[1],&rc,sizeof(&rc));
+				rc=0;
+				rp=0;
+				printf("Switching to client for new try.\n");
+				fflush(stdout);
 				kill(clientpid,SIGCONT);
 				pause();//shift control
 			}
