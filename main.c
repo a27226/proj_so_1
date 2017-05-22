@@ -41,7 +41,7 @@ int Menu()
 int main()
 {
 	signal(SIGCONT, handler);
-	int p1[2],p2[2], codeclient[4],codeserver[4], pid, i, j, k, clientpid, serverpid,rc=0,rp=0;
+	int p1[2],p2[2], codeclient[4],codeserver[4], colors[4]={0,0,0,0}, pid, i, j, k, clientpid, serverpid,rc=0,rp=0;
 	pipe(p1);
 	pipe(p2);
 	pid = fork(); 
@@ -52,7 +52,7 @@ int main()
 			int colorc, posc;
 			clientpid=getpid();
 			write(p1[1], &clientpid, sizeof(&clientpid));
-			sleep(4);
+			sleep(1);
 			read(p2[0],&serverpid,sizeof(&serverpid));
 			printf("waiting for signal");
 			fflush(stdout);
@@ -75,16 +75,14 @@ int main()
 				write(p1[1], codeclient, sizeof(codeclient));//escreve tentativa na pipe
 				kill(serverpid,SIGCONT);//passa controlo e pausa
 				pause();
-				printf("Switched to client for new try.\n");
 				fflush(stdout);
 				read(p2[0],&posc, sizeof(&posc));
 				read(p2[0],&colorc, sizeof(&colorc));
-				printf("Tem %d cores em %d posicoes corretas.\n", colorc, posc);
 				fflush(stdout);
 				if(posc==4)
 				{
 					printf("Parabens! Voce venceu o jogo do Mastermind!\n");
-					kill(serverpid,SIGSTOP);
+					kill(serverpid,SIGKILL);
 					return 1;
 				}
 				else
@@ -121,7 +119,7 @@ int main()
 			{	//escolhe codigo
 				do
 				{
-					printf("(Server)Insira digito %d\n",(i+1));
+					printf("(Server)Insira %d digito do codigo a decifrar:\n",(i+1));
 					fflush(stdout);
 					scanf("%d", &codeserver[i]);
 				} while(codeserver[i]<0 || codeserver[i]>5);
@@ -141,28 +139,31 @@ int main()
 				{
 					for(int l=0;l<4;l++)
 					{
-						if(codeclient[l]==codeserver[l])
+						printf("i = %d e j = %d\n",k,l);
+						if(codeclient[k]==codeserver[l])
 						{
-							if(l==k)
+							if(colors[k]==0)
 							{
-								rp++;
+								if(l==k)
+								{
+									rp++;
+									rc++;
+									break;
+								}
 								rc++;
-								break;
+								colors[k]=1;
 							}
-							rc++;
 						}
 					}	
 				}
 				fflush(stdout);
-				if(rc>4)
-					rc=4;
-				printf("O jogador tem %d cores em %d posicoes corretas.\n", rc, rp);
+				colors[0]=0;
+				colors[1]=0;
+				colors[2]=0;
+				colors[3]=0;
 				write(p2[1],&rp,sizeof(&rp));
 				sleep(1);
 				write(p2[1],&rc,sizeof(&rc));
-				rc=0;
-				rp=0;
-				printf("Switching to client for new try.\n");
 				fflush(stdout);
 				kill(clientpid,SIGCONT);
 				pause();//shift control
