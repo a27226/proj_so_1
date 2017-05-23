@@ -53,7 +53,7 @@ int main()
 void jogo()
 {
 	signal(SIGCONT, handler);
-	int p1[2],p2[2], codeclient[4],codeserver[4], colors[4]={0,0,0,0}, checkc[4]={0,0,0,0}, pid, i, j, k, clientpid, serverpid,rc=0,rp=0;
+	int p1[2],p2[2], codeclient[4],codeserver[4], colors[6]={0,0,0,0,0,0}, checkp[4]={0,0,0,0}, pid, i, j, k, clientpid, serverpid,rc=0,rp=0;
 	pipe(p1);
 	pipe(p2);
 	pid = fork(); 
@@ -133,7 +133,6 @@ void jogo()
 				printf("%d\n",codeserver[c]);
 			kill(clientpid,SIGCONT);
 			pause();//passa controlo para o cliente (kil e depois pause)
-			fflush(stdout);
 			//server checks if code is right
 			for(int b=0;b<10;b++)
 			{	
@@ -147,30 +146,40 @@ void jogo()
 					{
 						if(codeclient[k]==codeserver[l])
 						{
-							
+							if(colors[codeclient[k]]==0)
+							{
 								rc++;
-								if(l==k)
+								printf("%d bem.\n",rc);
+								fflush(stdout);
+								colors[codeclient[k]]=1;
+							}
+							if(l==k)
+							{
+								if(checkp[k]==0)
 								{
 									rp++;
+									printf("%d no sitio certo.\n",rp);
+									fflush(stdout);
+									checkp[k]=1;
 									break;
 								}
-							colors[k]=1;
+							}
 						}
 					}	
 				}
-				fflush(stdout);
 				colors[0]=0;
 				colors[1]=0;
 				colors[2]=0;
 				colors[3]=0;
-				checkc[0]=0;
-				checkc[1]=0;
-				checkc[2]=0;
-				checkc[3]=0;
+				colors[4]=0;
+				colors[5]=0;
+				checkp[0]=0;
+				checkp[1]=0;
+				checkp[2]=0;
+				checkp[3]=0;
 				write(p2[1],&rp,sizeof(&rp));
 				sleep(1);
 				write(p2[1],&rc,sizeof(&rc));
-				fflush(stdout);
 				kill(clientpid,SIGCONT);
 				pause();//shift control
 			}
