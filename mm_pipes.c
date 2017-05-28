@@ -208,7 +208,7 @@ void jogopvp()
 			read(p2[0],&serverpid,sizeof(&serverpid));
 			kill(serverpid, SIGCONT);
 			pause();
-			printf("Bem vindo ao modo PvP do jogo do Mastermind!\nO objectivo do jogo e adivinhar a combinacao correta de cores usando o metodo de tentativa/erro.\nNao se esqueca que pode haver cores repetidas!\nCada jogador tem 10 tentativas. Quando elas acabarem perde o jogo.\nBoa sorte!\n\n");
+			printf("Bem vindo ao modo PvP do jogo Mastermind!\nO objectivo do jogo e adivinhar a combinacao correta de cores usando o metodo de tentativa/erro.\nNao se esqueca que pode haver cores repetidas!\nCada jogador tem 10 tentativas. Quando elas acabarem perde o jogo.\nBoa sorte!\n\n");
 			fflush(stdout);
 			for(int i=0;i<20;i++)//game cycle for client
 			{
