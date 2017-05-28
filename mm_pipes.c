@@ -192,7 +192,8 @@ void jogocpu()
 void jogopvp()
 {
 	signal(SIGCONT, handler);
-	int p1[2],p2[2], codeclient[4],codeserver[4], colors[6]={0,0,0,0,0,0}, checkp[4]={0,0,0,0}, pid, i, j, k, clientpid, serverpid, rc=0, rp=0, t=2;
+	srand(time(NULL));
+	int p1[2],p2[2], codeclient[4],codeserver[4], colors[6]={0,0,0,0,0,0}, checkp[4]={0,0,0,0}, pid, i, j, k, clientpid, serverpid, rc=0, rp=0, t=rand()%3+1;
 	pipe(p1);
 	pipe(p2);
 	pid = fork(); 
@@ -207,7 +208,7 @@ void jogopvp()
 			read(p2[0],&serverpid,sizeof(&serverpid));
 			kill(serverpid, SIGCONT);
 			pause();
-			printf("Bem vindo ao jogo do Mastermind!\nO objectivo do jogo e adivinhar a combinacao correta de cores usando o metodo de tentativa/erro.\nNao se esqueca que pode haver cores repetidas!\nTem 20 tentativas. Quando elas acabarem perde o jogo.\nBoa sorte!\n\n");
+			printf("Bem vindo ao jogo do Mastermind!\nO objectivo do jogo e adivinhar a combinacao correta de cores usando o metodo de tentativa/erro.\nNao se esqueca que pode haver cores repetidas!\nCada jogador tem 10 tentativas. Quando elas acabarem perde o jogo.\nBoa sorte!\n\n");
 			fflush(stdout);
 			for(int i=0;i<20;i++)//game cycle for client
 			{
